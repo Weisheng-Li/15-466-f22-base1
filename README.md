@@ -1,8 +1,8 @@
-# (TODO: your game's title)
+# An Annoying Maze
 
-Author: (TODO: your name)
+Author: Weisheng Li
 
-Design: (TODO: In two sentences or fewer, describe what is new and interesting about your game.)
+Design: It's just about finding a path in a maze, but the control is not always what you would expect...
 
 Screen Shot:
 
@@ -10,13 +10,14 @@ Screen Shot:
 
 How Your Asset Pipeline Works:
 
-(TODO: describe the steps in your asset pipeline, from source files to tiles/backgrounds/whatever you upload to the PPU466.)
+I author the pixel images through an online drawing tool called Pixelart. The image is exported as png files. I use a python script png2tiles.py to convert all 8*8 png images to a single runtime file, tiles.asset. It then gets loaded into the PPU in the constructor of PlayMode.
 
-(TODO: make sure the source files you drew are included. You can [link](your/file.png) to them to be a bit fancier.)
+The background is hard coded. My original plan was to segment the background and read it in as regular tile assets, but don't have time to finish that.
 
 How To Play:
 
-(TODO: describe the controls and (if needed) goals/strategy.)
+Control: ↑ ↓ → ←
+Goal: find your way to the upper right corner of the map, which is the exit of maze
 
 This game was built with [NEST](NEST.md).
 
