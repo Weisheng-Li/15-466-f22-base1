@@ -5,6 +5,7 @@ import sys
 
 # constraint set by PPU446
 MAX_PALETTE_COLOR = 4
+MAX_PALETTE = 8
 MAX_TILE = 256
 
 def main():
@@ -57,6 +58,7 @@ def main():
     tiles_count = tiles.shape[0]
     palettes_count = palettes.shape[0]
     assert(tiles.shape[0] == tp_map.shape[0])
+    assert(palettes.shape[0] <= MAX_PALETTE )
 
     # time to export the result!
     tiles = np.array2string(tiles, separator=" ")

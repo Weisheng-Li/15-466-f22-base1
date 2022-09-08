@@ -9,49 +9,10 @@
 #include <random>
 
 PlayMode::PlayMode() {
-	//TODO:
-	// you *must* use an asset pipeline of some sort to generate tiles.
-	// don't hardcode them like this!
-	// or, at least, if you do hardcode them like this,
-	//  make yourself a script that spits out the code that you paste in here
-	//   and check that script into your repository.
-
-	//Also, *don't* use these tiles in your game:
-
-	{ //use tiles 0-16 as some weird dot pattern thing:
-		std::array< uint8_t, 8*8 > distance;
-		for (uint32_t y = 0; y < 8; ++y) {
-			for (uint32_t x = 0; x < 8; ++x) {
-				float d = glm::length(glm::vec2((x + 0.5f) - 4.0f, (y + 0.5f) - 4.0f));
-				d /= glm::length(glm::vec2(4.0f, 4.0f));
-				distance[x+8*y] = uint8_t(std::max(0,std::min(255,int32_t( 255.0f * d ))));
-			}
-		}
-		for (uint32_t index = 0; index < 16; ++index) {
-			PPU466::Tile tile;
-			uint8_t t = uint8_t((255 * index) / 16);
-			for (uint32_t y = 0; y < 8; ++y) {
-				uint8_t bit0 = 0;
-				uint8_t bit1 = 0;
-				for (uint32_t x = 0; x < 8; ++x) {
-					uint8_t d = distance[x+8*y];
-					if (d > t) {
-						bit0 |= (1 << x);
-					} else {
-						bit1 |= (1 << x);
-					}
-				}
-				tile.bit0[y] = bit0;
-				tile.bit1[y] = bit1;
-			}
-			ppu.tile_table[index] = tile;
-		}
-	}
-
-	// ignore everything above
+	// load tiles into palette_table and tile table
 	load_tiles("tiles.asset");
 
-	// set up darkness
+	// set up the darkness tile (basically all black)
 	tile_table[3].bit0 = { 0,0,0,0,0,0,0,0 };
 	tile_table[3].bit1 = { 0,0,0,0,0,0,0,0 };
 	palette_table[3] = {
@@ -61,49 +22,48 @@ PlayMode::PlayMode() {
 		glm::u8vec4(0x00, 0x00, 0x00, 0xff)
 	};
 
-	//ppu.palette_table[7] = palette_table[0];
-	//ppu.tile_table[32] = tile_table[0];
 	ppu.palette_table = palette_table;
 	ppu.tile_table = tile_table;
 
 	// map editor
 	std::array<bool, PPU466::BackgroundWidth * PPU466::BackgroundHeight> map = {
 		1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,0,0,0,
-		1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-		1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,
-		1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-		1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-		1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-		1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-		1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-		1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-		1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-		1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-		1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-		1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-		1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-		1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-		1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-		1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-		1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-		1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-		1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-		1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-		1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-		1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-		1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-		1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-		1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-		1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
-		0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
+		1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,
+		1,0,0,0,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,1,0,0,0,0,0,0,0,0,0,
+		1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,0,0,0,1,0,0,0,0,1,1,1,0,1,
+		1,0,0,1,0,0,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,0,0,1,1,0,0,0,0,1,1,1,1,
+		1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,1,0,0,1,1,1,0,0,0,1,0,0,1,
+		1,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0, 0,0,0,1,0,0,1,1,1,1,0,0,1,0,0,1,
+		1,0,0,1,0,1,1,1,1,1,1,1,1,1,1,1, 1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,
+		1,0,0,1,0,1,0,0,0,0,0,0,0,0,0,0, 1,0,0,1,0,0,0,0,0,1,0,0,1,0,0,1,
+		1,0,0,1,0,1,0,1,0,0,0,0,0,1,0,0, 1,0,0,1,0,0,0,0,0,1,0,0,1,0,0,1,
+		1,0,0,1,0,1,0,1,0,0,0,0,0,1,0,0, 1,0,0,1,0,0,1,0,0,1,0,0,1,1,1,1,
+		1,0,0,1,0,1,0,1,0,0,0,0,0,1,0,0, 1,0,0,1,0,0,1,0,0,1,0,0,0,0,0,1,
+		1,0,0,1,0,1,0,1,0,0,0,1,0,1,0,0, 1,0,0,1,0,0,1,0,0,1,0,0,0,0,0,1,
+		1,0,0,1,0,0,0,1,0,0,0,1,0,1,0,0, 1,0,0,1,0,0,1,0,0,1,0,1,1,0,0,1,
+		1,0,0,1,0,0,0,1,0,0,0,1,0,1,0,0, 1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,
+		1,0,0,1,1,1,1,1,0,0,0,1,0,1,0,0, 1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,
+		1,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0, 1,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,
+		1,0,0,0,0,0,0,0,0,0,0,1,0,1,0,0, 0,0,0,1,0,0,1,0,0,1,0,0,1,0,0,1,
+		1,0,0,1,1,1,1,1,1,0,0,1,0,1,1,1, 1,1,1,1,0,0,1,0,0,1,0,0,1,0,0,1,
+		1,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, 0,0,0,0,0,1,0,0,0,1,0,0,1,0,0,1,
+		1,0,0,1,0,0,0,0,0,0,0,1,0,0,0,0, 0,0,0,0,1,0,0,0,0,1,0,0,1,0,0,1,
+		1,0,0,1,0,0,1,1,1,1,1,1,0,0,0,0, 0,0,1,1,0,0,0,0,0,1,0,0,0,0,0,1,
+		1,0,0,1,0,0,1,0,0,0,0,0,0,0,0,0, 0,1,0,0,0,0,1,0,0,1,1,1,1,0,0,1,
+		1,0,0,1,0,0,1,0,0,1,1,1,1,1,1,1, 1,1,0,0,0,0,1,0,0,0,0,0,1,0,0,1,
+		1,0,0,1,0,0,1,0,0,0,0,0,0,0,0,0, 0,0,1,0,0,0,1,0,0,0,0,0,1,0,0,1,
+		1,0,0,1,0,0,1,1,1,1,1,1,1,1,1,1, 0,1,0,0,1,1,1,1,1,0,0,0,1,0,0,1,
+		1,0,0,1,0,0,1,0,0,0,0,0,0,0,0,0, 0,1,0,0,0,1,0,0,0,0,0,0,1,0,0,1,
+		0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,0, 1,1,0,0,0,1,1,1,1,1,0,0,0,0,0,1,
+		0,0,0,1,0,0,0,0,0,0,0,0,0,0,0,1, 0,0,0,0,0,0,0,0,0,0,0,0,0,0,0,1,
 		0,0,0,1,1,1,1,1,1,1,1,1,1,1,1,1, 1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,1,
 	};
 
+	// set up the background
 	uint16_t wall_tile = 0x0202;
 	uint16_t floor_tile = 0x0101;
 	uint16_t darkness = 0x0303;
-	std::cout << std::bitset<16>(darkness) << std::endl;
+
 	uint32_t height = PPU466::BackgroundHeight;
 	uint32_t width = PPU466::BackgroundWidth;
 	for (uint32_t y = 0; y < height; ++y) {
@@ -164,13 +124,61 @@ bool PlayMode::handle_event(SDL_Event const &evt, glm::uvec2 const &window_size)
 	return false;
 }
 
+// check whether the current player position colide with a wall on the background
+bool PlayMode::is_collide(glm::vec2 player_pos) {
+	if (player_pos.x < 0.1 || player_pos.y < 0.1) return true;
+
+	glm::uvec2 lower_left(glm::floor(player_pos.x)/8, glm::floor(player_pos.y)/8);
+	glm::uvec2 upper_right = lower_left + glm::uvec2(1u, 1u);
+	glm::uvec2 lower_right = lower_left + glm::uvec2(1u, 0u);
+	glm::uvec2 upper_left = lower_left + glm::uvec2(0u, 1u);
+
+	assert(upper_right.x < PPU466::BackgroundWidth);
+	assert(upper_right.y < PPU466::BackgroundHeight);
+
+	std::cout << lower_left.x << " " << lower_left.y << std::endl;
+
+	// 0x0101 is the background tile value of floor
+	return ppu.background[lower_left.x + PPU466::BackgroundWidth * lower_left.y] != 0x0101
+		|| ppu.background[upper_right.x + PPU466::BackgroundWidth * upper_right.y] != 0x0101
+		|| ppu.background[lower_right.x + PPU466::BackgroundWidth * lower_right.y] != 0x0101
+		|| ppu.background[upper_left.x + PPU466::BackgroundWidth * upper_left.y] != 0x0101;
+}
+
 void PlayMode::update(float elapsed) {
+	// define locations where the key mapping changed
+	bool x_flip = player_at.x >= 19 * 8;
+	bool y_flip = player_at.y >= 12.5 * 8;
 
 	constexpr float PlayerSpeed = 30.0f;
-	if (left.pressed) player_at.x -= PlayerSpeed * elapsed;
-	if (right.pressed) player_at.x += PlayerSpeed * elapsed;
-	if (down.pressed) player_at.y -= PlayerSpeed * elapsed;
-	if (up.pressed) player_at.y += PlayerSpeed * elapsed;
+	glm::vec2 orig_pos = player_at;
+	if (!x_flip && !y_flip) {
+		if (left.pressed) { player_at.x -= PlayerSpeed * elapsed; }
+		if (right.pressed) { player_at.x += PlayerSpeed * elapsed; }
+		if (down.pressed) { player_at.y -= PlayerSpeed * elapsed; }
+		if (up.pressed) { player_at.y += PlayerSpeed * elapsed; }
+	}
+	else if (x_flip && !y_flip) {
+		if (left.pressed) { player_at.y -= PlayerSpeed * elapsed; }
+		if (right.pressed) { player_at.x -= PlayerSpeed * elapsed; }
+		if (down.pressed) { player_at.y += PlayerSpeed * elapsed; }
+		if (up.pressed) { player_at.x += PlayerSpeed * elapsed; }
+	}
+	else if (!x_flip && y_flip) {
+		if (left.pressed) { player_at.x += PlayerSpeed * elapsed; }
+		if (right.pressed) { player_at.y -= PlayerSpeed * elapsed; }
+		if (down.pressed) { player_at.y += PlayerSpeed * elapsed; }
+		if (up.pressed) { player_at.x -= PlayerSpeed * elapsed; }
+	}
+	else {
+		if (left.pressed) { player_at.y += PlayerSpeed * elapsed; }
+		if (right.pressed) { player_at.x += PlayerSpeed * elapsed; }
+		if (down.pressed) { player_at.x -= PlayerSpeed * elapsed; }
+		if (up.pressed) { player_at.y -= PlayerSpeed * elapsed; }
+	}
+
+	if (is_collide(player_at))
+		player_at = orig_pos;
 
 	//reset button press counters:
 	left.downs = 0;
@@ -185,15 +193,6 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	// just regular all white background:
 	ppu.background_color = glm::u8vec4(0xff, 0xff, 0xff, 0xff);
 
-	//tilemap gets recomputed every frame as some weird plasma thing:
-	//NOTE: don't do this in your game! actually make a map or something :-)
-	//for (uint32_t y = 0; y < PPU466::BackgroundHeight; ++y) {
-	//	for (uint32_t x = 0; x < PPU466::BackgroundWidth; ++x) {
-	//		//TODO: load the map
-	//		ppu.background[x + PPU466::BackgroundWidth * y] = ((x + y) % 16);
-	//	}
-	//}
-
 	//background scroll:
 	//ppu.background_position.x = int32_t(-0.5f * player_at.x);
 	//ppu.background_position.y = int32_t(-0.5f * player_at.y);
@@ -202,8 +201,6 @@ void PlayMode::draw(glm::uvec2 const &drawable_size) {
 	//player sprite:
 	ppu.sprites[0].x = int8_t(player_at.x);
 	ppu.sprites[0].y = int8_t(player_at.y);
-	//ppu.sprites[0].index = 32;
-	//ppu.sprites[0].attributes = 7;
 	ppu.sprites[0].index = 0;
 	ppu.sprites[0].attributes = 0;
 
@@ -231,7 +228,6 @@ void PlayMode::load_tiles(std::string tile_path) {
 			assert(color_idx < 4);
 			uint8_t bit0 = color_idx & 1;
 			uint8_t bit1 = (color_idx >> 1) & 1;
-			// std::cout << color_idx_32 << " bit1:" << std::bitset<8>(bit1) << " bit0:" << std::bitset<8>(bit0) << std::endl;
 			unsigned int x = i % 8, y = i / 8;
 
 			new_tile.bit0[y] |= bit0 << (7 - x);
@@ -259,7 +255,6 @@ void PlayMode::load_tiles(std::string tile_path) {
 		for (int i = 0; i < 4; i++) {
 			unsigned int R_32, G_32, B_32, A_32;
 			path >> R_32 >> G_32 >> B_32 >> A_32;
-			// std::cout << R_32 << G_32 << B_32 << A_32 << std::endl;
 			uint8_t R = static_cast<uint8_t> (R_32);
 			uint8_t G = static_cast<uint8_t> (G_32);
 			uint8_t B = static_cast<uint8_t> (B_32);

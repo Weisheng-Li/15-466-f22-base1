@@ -23,6 +23,9 @@ struct PlayMode : Mode {
 	// asset loading functions
 	void load_tiles(std::string tile_path);
 
+	// helper function
+	bool is_collide(glm::vec2 player_pos);
+
 	//----- game state -----
 
 	//input tracking:
